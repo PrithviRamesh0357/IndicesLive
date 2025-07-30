@@ -5,6 +5,7 @@ require("dotenv").config();
 let accessToken = null;
 
 async function exchangeCodeForToken(code) {
+  const startTime = new Date();
   console.log("Exchanging code for token:IMPORTANT:", code);
   const payload = {
     code: code,
@@ -15,7 +16,7 @@ async function exchangeCodeForToken(code) {
   };
 
   const response = await axios.post(
-    "https://api-v2.upstox.com/login/v2/oauth/token",
+    "https://api.upstox.com/v2/login/authorization/token",
     qs.stringify(payload),
     {
       headers: {
@@ -25,6 +26,8 @@ async function exchangeCodeForToken(code) {
     }
   );
   console.log("Response:", response.data);
+  const endTime = new Date();
+  console.log("Time taken for token exchange:", endTime - startTime, "ms");
 
   accessToken = response.data.access_token;
   console.log("AccessToken:", accessToken);
