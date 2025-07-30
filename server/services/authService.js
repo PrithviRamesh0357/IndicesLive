@@ -6,6 +6,7 @@ let accessToken = null;
 
 async function exchangeCodeForToken(code) {
   const payload = {
+    code: code,
     grant_type: "authorization_code",
     client_id: process.env.UPSTOX_CLIENT_ID,
     client_secret: process.env.UPSTOX_CLIENT_SECRET,
@@ -13,16 +14,19 @@ async function exchangeCodeForToken(code) {
   };
 
   const response = await axios.post(
-    "https://api.upstox.com/index/oauth/token",
+    "https://api-v2.upstox.com/login/v2/oauth/token",
     qs.stringify(payload),
     {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
+        accept: "application/json",
       },
     }
   );
 
   accessToken = response.data.access_token;
+  console.log("AccessToken:", accessToken);
+
   return accessToken;
 }
 
