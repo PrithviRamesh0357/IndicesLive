@@ -5,6 +5,7 @@ require("dotenv").config();
 let accessToken = null;
 
 async function exchangeCodeForToken(code) {
+  console.log("Exchanging code for token:IMPORTANT:", code);
   const payload = {
     code: code,
     grant_type: "authorization_code",
@@ -23,6 +24,7 @@ async function exchangeCodeForToken(code) {
       },
     }
   );
+  console.log("Response:", response.data);
 
   accessToken = response.data.access_token;
   console.log("AccessToken:", accessToken);
