@@ -1,13 +1,10 @@
 const axios = require("axios");
 const qs = require("qs");
 require("dotenv").config();
-const RedisService = require("../services/redisService");
-
-let accessToken = null;
+const RedisService = require("./redisService");
+const logger = require("../utils/logger");
 
 async function exchangeCodeForToken(code) {
-  const startTime = new Date();
-  console.log("Exchanging code for token:IMPORTANT:", code);
   const payload = {
     code: code,
     grant_type: "authorization_code",
@@ -16,32 +13,36 @@ async function exchangeCodeForToken(code) {
     redirect_uri: process.env.UPSTOX_REDIRECT_URI,
   };
 
+  logger.info("Exchanging authorization code for access token...");
+
+  //Cannot send the payload as JSON, as the Upstox API expects it in a URL-encoded format.i.e a string like `key1=value1&key2=value2`
+  //So we use qs.stringify to convert the payload object into a query string format.
   const response = await axios.post(
     "https://api.upstox.com/v2/login/authorization/token",
+    //
     qs.stringify(payload),
     {
       headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
+        "Content-Type": "application/x-www-form-urlencoded", //We need response as a encoded string not a JSON object. It will look like a query string in URL
         accept: "application/json",
       },
     }
   );
-  console.log("Response:", response.data);
-  const endTime = new Date();
-  console.log("Time taken for token exchange:", endTime - startTime, "ms");
 
-  accessToken = response.data.access_token;
-  await RedisService.set("ACCESS_TOKEN", accessToken);
+  const accessToken = response.data.access_token;
 
-  //Testing:
-  await RedisService.get("ACCESS_TOKEN");
-  console.log("AccessToken from the exchangeForToken ******:", accessToken);
+  // Standardize on this key, as it's used by the WebSocket service.
+  const redisKey = "UPSTOX_ACCESS_TOKEN";
+  const sixHoursInSeconds = 6 * 60 * 60;
+
+  logger.info("Received Access KEY... Now setting into Redis");
+
+  await RedisService.set(redisKey, accessToken, sixHoursInSeconds);
+  logger.info(`Access token saved to Redis with key: ${redisKey}`);
+
+  logger.info("Exiting from exchangeCodeForTokn function");
 
   return accessToken;
 }
 
-function getAccessToken() {
-  return accessToken;
-}
-
-module.exports = { exchangeCodeForToken, getAccessToken };
+module.exports = { exchangeCodeForToken };
