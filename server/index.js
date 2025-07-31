@@ -2,11 +2,19 @@ const express = require("express");
 const cors = require("cors");
 const PORT = process.env.PORT || 3000;
 
+const RedisService = require("./services/redisService");
+
 const app = express();
 
 app.use(cors());
 const authRoutes = require("./routes/auth");
 app.use("/auth", authRoutes);
+
+app.get("/test-token", async (req, res) => {
+  const token = await RedisService.get("ACCESS_TOKEN");
+  res.send({ token });
+});
+
 app.get("/", (req, res) => {
   res.send("Backend is running!");
 });

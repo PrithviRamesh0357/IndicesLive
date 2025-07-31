@@ -1,6 +1,7 @@
 const axios = require("axios");
 const qs = require("qs");
 require("dotenv").config();
+const RedisService = require("../services/redisService");
 
 let accessToken = null;
 
@@ -30,7 +31,11 @@ async function exchangeCodeForToken(code) {
   console.log("Time taken for token exchange:", endTime - startTime, "ms");
 
   accessToken = response.data.access_token;
-  console.log("AccessToken:", accessToken);
+  await RedisService.set("ACCESS_TOKEN", accessToken);
+
+  //Testing:
+  await RedisService.get("ACCESS_TOKEN");
+  console.log("AccessToken from the exchangeForToken ******:", accessToken);
 
   return accessToken;
 }
