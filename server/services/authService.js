@@ -1,10 +1,11 @@
 const axios = require("axios");
 const qs = require("qs");
 require("dotenv").config();
-const RedisService = require("./redisService");
+//const RedisService = require("./redisService");
 const logger = require("../utils/logger");
 
 async function exchangeCodeForToken(code) {
+  console.log("Entering exchangeCodeForToken function");
   const payload = {
     code: code,
     grant_type: "authorization_code",
@@ -35,10 +36,10 @@ async function exchangeCodeForToken(code) {
   const redisKey = "UPSTOX_ACCESS_TOKEN";
   const sixHoursInSeconds = 6 * 60 * 60;
 
-  logger.info("Received Access KEY... Now setting into Redis");
+  logger.info("Received Access KEY... " + accessToken);
 
-  await RedisService.set(redisKey, accessToken, sixHoursInSeconds);
-  logger.info(`Access token saved to Redis with key: ${redisKey}`);
+  //await RedisService.set(redisKey, accessToken, sixHoursInSeconds);
+  //logger.info(`Access token saved to Redis with key: ${redisKey}`);
 
   logger.info("Exiting from exchangeCodeForTokn function");
 

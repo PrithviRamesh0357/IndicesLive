@@ -13,8 +13,8 @@ const authRoutes = require("./routes/auth");
 app.use("/auth", authRoutes);
 
 app.get("/test-token", async (req, res) => {
-  const token = await RedisService.get("UPSTOX_ACCESS_TOKEN");
-  res.send({ token });
+  //const token = await RedisService.get("UPSTOX_ACCESS_TOKEN");
+  //res.send({ token });
 });
 
 app.get("/", (req, res) => {
@@ -35,9 +35,9 @@ app.get("/api/market", (req, res) => {
   res.json(mockData);
 });
 
-app.listen(PORT, "0.0.0.0", () => {
+app.listen(PORT, () => {
   logger.info(`Server is running and listening on PORT: ${PORT}`);
   // Once the server is running, initialize the WebSocket service.
   // This will handle reconnecting on server restarts if a token exists.
-  marketDataService.initialize();
+  //marketDataService.initialize();
 });

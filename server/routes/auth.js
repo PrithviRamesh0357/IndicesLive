@@ -7,15 +7,15 @@ const { connectSocket } = require("../services/marketDataService/upstoxSocket");
 
 router.get("/callback", async (req, res) => {
   const code = req.query.code;
-  logger.info(`Received authorization code.`);
+  logger.info(`Received authorization code. ${code}`);
 
   try {
     const token = await exchangeCodeForToken(code);
     // The token is now saved to Redis within the authService.
     logger.info(
-      "Authentication successful. Triggering WebSocket connection..."
+      "Authentication successful. Triggering WebSocket connection...Commented it"
     );
-    connectSocket(); // Initiate the market data feed connection.
+    //connectSocket(); // Initiate the market data feed connection.
     res.json({ access_token: token });
   } catch (error) {
     // Log more detailed error information from the API response if it exists.
