@@ -6,12 +6,25 @@ const logger = require("../utils/logger");
 
 async function exchangeCodeForToken(code) {
   console.log("Entering exchangeCodeForToken function");
+
+  console.log("UPSTOX_CLIENT_ID:", process.env.UPSTOX_CLIENT_ID);
+  console.log("UPSTOX_CLIENT_SECRET:", process.env.UPSTOX_CLIENT_SECRET);
+  console.log("UPSTOX_REDIRECT_URI:", process.env.UPSTOX_REDIRECT_URI);
+
+  // const payload = {
+  //   code: code,
+  //   grant_type: "authorization_code",
+  //   client_id: process.env.UPSTOX_CLIENT_ID,
+  //   client_secret: process.env.UPSTOX_CLIENT_SECRET,
+  //   redirect_uri: process.env.UPSTOX_REDIRECT_URI,
+  // };
+
   const payload = {
     code: code,
     grant_type: "authorization_code",
-    client_id: process.env.UPSTOX_CLIENT_ID,
-    client_secret: process.env.UPSTOX_CLIENT_SECRET,
-    redirect_uri: process.env.UPSTOX_REDIRECT_URI,
+    client_id: "f4f1d4a9-20fa-4543-a12d-960194a0385d",
+    client_secret: "s4ar716g3g",
+    redirect_uri: "https://indiceslive.onrender.com/auth/callback",
   };
 
   logger.info("Exchanging authorization code for access token...");
