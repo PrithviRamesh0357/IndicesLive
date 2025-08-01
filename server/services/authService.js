@@ -7,8 +7,6 @@ const logger = require("../utils/logger");
 async function exchangeCodeForToken(code) {
   console.log("Entering exchangeCodeForToken function");
 
-  console.log("UPSTOX_CLIENT_ID:", process.env.UPSTOX_CLIENT_ID);
-  console.log("UPSTOX_CLIENT_SECRET:", process.env.UPSTOX_CLIENT_SECRET);
   console.log("UPSTOX_REDIRECT_URI:", process.env.UPSTOX_REDIRECT_URI);
 
   const payload = {
