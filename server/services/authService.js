@@ -1,14 +1,18 @@
 const axios = require("axios");
 const qs = require("qs");
-require("dotenv").config();
 const RedisService = require("./redisService");
 const logger = require("../utils/logger");
 
+// --- Constants for configuration ---
+const UPSTOX_TOKEN_URL = "https://api.upstox.com/v2/login/authorization/token";
+const REDIS_ACCESS_TOKEN_KEY = "UPSTOX_ACCESS_TOKEN";
+const ACCESS_TOKEN_TTL_SECONDS = 6 * 60 * 60; // 6 hours
+
 async function exchangeCodeForToken(code) {
   try {
-    console.log("Entering exchangeCodeForToken function");
+    logger.info("Entering exchangeCodeForToken function");
 
-    console.log("UPSTOX_REDIRECT_URI:", process.env.UPSTOX_REDIRECT_URI);
+    logger.debug(`UPSTOX_REDIRECT_URI: ${process.env.UPSTOX_REDIRECT_URI}`);
 
     const payload = {
       code: code,
@@ -20,32 +24,41 @@ async function exchangeCodeForToken(code) {
 
     logger.info("Exchanging authorization code for access token...");
 
-    //Cannot send the payload as JSON, as the Upstox API expects it in a URL-encoded format.i.e a string like `key1=value1&key2=value2`
-    //So we use qs.stringify to convert the payload object into a query string format.
-    const response = await axios.post(
-      "https://api.upstox.com/v2/login/authorization/token",
-      //
-      qs.stringify(payload),
-      {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded", //We need response as a encoded string not a JSON object. It will look like a query string in URL
-          accept: "application/json",
-        },
-      }
+    // The Upstox API expects the payload in a URL-encoded format, not JSON.
+    // We use qs.stringify to convert the payload object into a query string.
+    const response = await axios.post(UPSTOX_TOKEN_URL, qs.stringify(payload), {
+      headers: {
+        // This header specifies the format of the request body we are sending.
+        "Content-Type": "application/x-www-form-urlencoded",
+        // This header tells the server we accept a JSON response.
+        accept: "application/json",
+      },
+    });
+
+    const { access_token: accessToken } = response.data;
+
+    if (!accessToken) {
+      // This handles cases where the API responds with 200 OK but no token.
+      logger.error("Upstox API response did not include an access token.", {
+        responseData: response.data,
+      });
+      throw new Error("Access token not found in Upstox API response.");
+    }
+
+    // Security Best Practice: Confirm receipt of the token without logging the token itself.
+    // This prevents sensitive credentials from being exposed in logs.
+    logger.info("Received access token. Setting it in Redis...");
+
+    await RedisService.set(
+      REDIS_ACCESS_TOKEN_KEY,
+      accessToken,
+      ACCESS_TOKEN_TTL_SECONDS
+    );
+    logger.info(
+      `Access token saved to Redis with key: ${REDIS_ACCESS_TOKEN_KEY}`
     );
 
-    const accessToken = response.data.access_token;
-
-    // Standardize on this key, as it's used by the WebSocket service.
-    const redisKey = "UPSTOX_ACCESS_TOKEN";
-    const sixHoursInSeconds = 6 * 60 * 60;
-
-    logger.info("Received Access KEY...Setting it in Redis  " + accessToken);
-
-    await RedisService.set(redisKey, accessToken, sixHoursInSeconds);
-    logger.info(`Access token saved to Redis with key: ${redisKey}`);
-
-    logger.info("Exiting from exchangeCodeForTokn function");
+    logger.info("Exiting from exchangeCodeForToken function");
 
     return accessToken;
   } catch (error) {
