@@ -1,8 +1,13 @@
-# .gitignore
+# Dependencies
 node_modules/
+/server/node_modules/
+/client/node_modules/
+
+# Environment variables
 .env
-dist/
+/server/.env
+
+# Logs
 *.log
-.DS_Store
-coverage/
+#For future 
 PendingAndDoubt.md

@@ -1,49 +1,48 @@
 //Encapsulates Redis operations with optional TTL support.
-//const redisClient = require("../config/redisClient");
+const redisClient = require("../config/redisClient");
 const logger = require("../utils/logger");
 
 const RedisService = {
-  // async set(key, value, ttl = null) {
-  //   try {
-  //     const options = {};
-  //     if (ttl) {
-  //       // Use the 'EX' option for an atomic set-with-expiration.
-  //       // This is more efficient and safer than two separate commands.
-  //       options.EX = ttl;
-  //     }
-  //     // The value is expected to be a string or a Buffer.
-  //     // If you need to store objects, stringify them before calling this service.
-  //     await redisClient.set(key, value, options);
-  //   } catch (error) {
-  //     logger.error(`Error setting Redis key "${key}"`, { error: error.message });
-  //     // We log the error but don't re-throw it. A cache failure
-  //     // shouldn't necessarily crash the entire application.
-  //   }
-  // },
-  // async get(key) {
-  //   try {
-  //     return await redisClient.get(key);
-  //   } catch (error) {
-  //     logger.error(`Error getting Redis key "${key}"`, { error: error.message });
-  //     return null; // Return null on error to prevent unexpected crashes.
-  //   }
-  // },
-  // async del(key) {
-  //   try {
-  //     return await redisClient.del(key);
-  //   } catch (error) {
-  //     logger.error(`Error deleting Redis key "${key}"`, { error: error.message });
-  //     return 0; // `del` returns the number of keys deleted. 0 is a safe default.
-  //   }
-  // },
-  // async exists(key) {
-  //   try {
-  //     return await redisClient.exists(key);
-  //   } catch (error) {
-  //     logger.error(`Error checking existence of Redis key "${key}"`, { error: error.message });
-  //     return 0; // `exists` returns the number of keys that exist. 0 is a safe default.
-  //   }
-  // },
+  async set(key, value, ttl = null) {
+    logger.info(` IN REDIS SERVICE +++++++++++++++++++++++`);
+    logger.info(`Setting Redis key "${key}" with value "${value}"`);
+    try {
+      const options = {};
+      if (ttl) {
+        options.EX = ttl;
+      }
+      // If you need to store objects, stringify them before calling this service.
+      const valueToStore =
+        typeof value === "object" ? JSON.stringify(value) : value;
+      await redisClient.set(key, valueToStore, options);
+    } catch (error) {
+      logger.error(`Error setting Redis key "${key}"`, {
+        error: error.message,
+      });
+      // Re-throw the error so the route handler can catch it and send a 500 response.
+      throw error;
+    }
+  },
+
+  async get(key) {
+    try {
+      const value = await redisClient.get(key);
+      if (value === null) return null;
+
+      // Try to parse the value as JSON. If it's not valid JSON, return it as a raw string.
+      try {
+        return JSON.parse(value);
+      } catch (e) {
+        return value;
+      }
+    } catch (error) {
+      logger.error(`Error getting Redis key "${key}"`, {
+        error: error.message,
+      });
+      // Re-throw the error so the route handler can catch it.
+      throw error;
+    }
+  },
 };
 
 module.exports = RedisService;
