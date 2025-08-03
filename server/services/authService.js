@@ -5,7 +5,7 @@ const logger = require("../utils/logger");
 const upstoxSocketService = require("./marketDataService/upstoxSocket");
 
 // --- Constants for configuration ---
-const UPSTOX_TOKEN_URL = "https://api.upstox.com/v2/login/authorization/token";
+const UPSTOX_TOKEN_URL = "https://api-v2.upstox.com/login/authorization/token";
 const REDIS_ACCESS_TOKEN_KEY = "UPSTOX_ACCESS_TOKEN";
 const ACCESS_TOKEN_TTL_SECONDS = 6 * 60 * 60; // 6 hours
 

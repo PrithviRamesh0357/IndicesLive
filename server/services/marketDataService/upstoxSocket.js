@@ -8,9 +8,8 @@ const WebSocket = require("ws");
 const EventEmitter = require("events");
 const RedisService = require("../redisService");
 const logger = require("../../utils/logger");
-const { log } = require("console");
 
-const UPSTOX_WS_URL = "wss://api.upstox.com/v2/feed/market-data-feed";
+const UPSTOX_WS_URL = "wss://api-v2.upstox.com/feed/market-data-feed";
 const REDIS_ACCESS_TOKEN_KEY = "UPSTOX_ACCESS_TOKEN";
 
 class UpstoxSocketService {
