@@ -1,4 +1,5 @@
 //Encapsulates Redis operations with optional TTL support.
+const { log } = require("winston");
 const redisClient = require("../config/redisClient");
 const logger = require("../utils/logger");
 

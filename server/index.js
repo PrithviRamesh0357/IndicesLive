@@ -1,5 +1,7 @@
 const express = require("express");
 const cors = require("cors");
+const dotenv = require("dotenv");
+dotenv.config();
 
 const logger = require("./utils/logger");
 const RedisService = require("./services/redisService");
@@ -8,6 +10,11 @@ const marketDataService = require("./services/marketDataService/upstoxSocket");
 const app = express();
 
 const PORT = process.env.PORT || 3000;
+
+logger.debug("Debug log");
+logger.info("Info log");
+logger.warn("Warning log");
+logger.error("Error log");
 
 app.use(cors());
 app.use(express.json()); // Middleware to parse JSON bodies

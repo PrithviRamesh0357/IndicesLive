@@ -34,15 +34,4 @@ redisClient.connect().catch((err) => {
   logger.error(`❌ Initial Redis connection failed: ${err}`);
 });
 
-// Graceful shutdown
-const gracefulShutdown = async () => {
-  logger.info("Gracefully shutting down...");
-  await redisClient.quit();
-  logger.info("Redis client disconnected.");
-  process.exit(0);
-};
-
-process.on("SIGINT", gracefulShutdown);
-process.on("SIGTERM", gracefulShutdown);
-
 module.exports = redisClient;
