@@ -3,7 +3,6 @@ const router = express.Router();
 const logger = require("../utils/logger");
 
 const { exchangeCodeForToken } = require("../services/authService");
-const { connectSocket } = require("../services/marketDataService/upstoxSocket");
 
 router.get("/callback", async (req, res) => {
   const code = req.query.code;

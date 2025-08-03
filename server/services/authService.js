@@ -2,8 +2,8 @@ const axios = require("axios");
 const qs = require("qs");
 const RedisService = require("./redisService");
 const logger = require("../utils/logger");
+const upstoxSocketService = require("./marketDataService/upstoxSocket");
 
-const UpstoxSocketService = require("./marketDataService/upstoxSocket");
 // --- Constants for configuration ---
 const UPSTOX_TOKEN_URL = "https://api.upstox.com/v2/login/authorization/token";
 const REDIS_ACCESS_TOKEN_KEY = "UPSTOX_ACCESS_TOKEN";
@@ -59,10 +59,8 @@ async function exchangeCodeForToken(code) {
       `Access token saved to Redis with key: ${REDIS_ACCESS_TOKEN_KEY}`
     );
 
-    // Since the token is now stored in Redis, we can initialize the WebSocket connection.
-    console.log("Initializing Upstox WebSocket connection...");
-
-    UpstoxSocketService.connect();
+    logger.info("Authentication successful. Initiating WebSocket service...");
+    upstoxSocketService.connect();
 
     logger.info("Exiting from exchangeCodeForToken function");
 
