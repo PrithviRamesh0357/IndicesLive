@@ -40,10 +40,11 @@ class UpstoxSocketService {
 
       logger.info("Attempting to connect to Upstox WebSocket...");
       //This initiates the WebSocket connection/ handshake to Upstox.It sends an HTTP request to the UPSTOX_WS_URL with a special Upgrade: websocket header.
-      this.ws = new WebSocket(UPSTOX_WS_URL, {
+      const wsUrlWithAuth = `${UPSTOX_WS_URL}?token=${this.accessToken}`;
+      this.ws = new WebSocket(wsUrlWithAuth, {
         headers: {
-          Authorization: `Bearer ${this.accessToken}`,
           "Api-Version": "2.0", // Required for v2 API
+          // The token is sent as a query parameter, not an Authorization header for WebSockets.
         },
       });
 
