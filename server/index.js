@@ -5,7 +5,11 @@ dotenv.config();
 
 const logger = require("./utils/logger");
 const RedisService = require("./services/redisService");
-const marketDataService = require("./services/marketDataService/upstoxSocket");
+const {
+  connectToUpstoxV3,
+} = require("./services/marketDataService/upstoxSocketV3");
+const { REDIS_ACCESS_TOKEN_KEY } = require("./services/authService");
+const dataStore = require("./services/marketDataService/dataStore");
 
 const app = express();
 
@@ -59,6 +63,36 @@ app.get("/", (req, res) => {
 });
 
 app.get("/api/market", (req, res) => {
+  const allData = dataStore.getAllData();
+  const formattedData = {};
+
+  for (const instrumentKey in allData) {
+    const instrumentData = allData[instrumentKey];
+    // Safely access nested properties
+    const ltpc = instrumentData?.fullFeed?.indexFF?.ltpc;
+
+    if (ltpc && ltpc.ltp != null && ltpc.cp != null) {
+      const change = ltpc.ltp - ltpc.cp;
+      const percentChange = ((change / ltpc.cp) * 100).toFixed(2);
+
+      // Create a simpler key for the frontend, e.g., "NIFTY_50" from "NSE_INDEX|Nifty 50"
+      const simpleKey = instrumentKey
+        .split("|")[1]
+        .replace(" ", "_")
+        .toUpperCase();
+
+      formattedData[simpleKey] = {
+        value: ltpc.ltp.toFixed(2),
+        change: change.toFixed(2),
+        percentChange: `${percentChange > 0 ? "+" : ""}${percentChange}%`,
+      };
+    }
+  }
+
+  res.json(formattedData);
+});
+
+app.get("/api/mock-data", (req, res) => {
   const mockData = {
     NIFTY: {
       value: (19700 + Math.random() * 100).toFixed(2),
@@ -72,9 +106,26 @@ app.get("/api/market", (req, res) => {
   res.json(mockData);
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   logger.info(`Server is running and listening on PORT: ${PORT}`);
-  // Once the server is running, initialize the WebSocket service.
-  // This will handle reconnecting on server restarts if a token exists.
-  //marketDataService.initialize();
+
+  // On server startup, check if a token exists and try to connect to the WebSocket.
+  try {
+    const accessToken = await RedisService.get(REDIS_ACCESS_TOKEN_KEY);
+    if (accessToken) {
+      logger.info(
+        "Access token found in Redis on startup. Attempting to connect to WebSocket..."
+      );
+      connectToUpstoxV3(accessToken);
+    } else {
+      logger.warn(
+        "No access token found in Redis. Please log in via /auth/login to establish a WebSocket connection."
+      );
+    }
+  } catch (error) {
+    logger.error(
+      "Failed to initialize WebSocket connection on startup.",
+      error
+    );
+  }
 });

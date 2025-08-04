@@ -74,10 +74,11 @@ async function exchangeCodeForToken(code) {
       status: error.response?.status,
       data: error.response?.data,
       message: error.message,
+
     });
     // Re-throw the error to be handled by the calling function (e.g., in the route handler)
     throw error;
   }
 }
 
-module.exports = { exchangeCodeForToken };
+module.exports = { exchangeCodeForToken, REDIS_ACCESS_TOKEN_KEY };
