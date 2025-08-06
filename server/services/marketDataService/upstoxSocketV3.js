@@ -3,6 +3,7 @@ const WebSocket = require("ws").WebSocket;
 const protobuf = require("protobufjs");
 const axios = require("axios");
 const logger = require("../../utils/logger");
+const dataStore = require("./dataStore");
 
 // Initialize global variables
 let protobufRoot = null;
@@ -51,9 +52,32 @@ const connectWebSocket = async (wsUrl) => {
 
     ws.on("message", (data) => {
       const decodedData = decodeProfobuf(data);
-      logger.info("Received decoded market data:IMP$$$$$$$$$$$$", {
-        data: decodedData.toJSON(),
-      });
+
+      // If the message is a live feed, update our data store
+      if (decodedData && decodedData.feeds) {
+        for (const instrumentKey in decodedData.feeds) {
+          const instrumentData = decodedData.feeds[instrumentKey];
+          // This is the correct place to call the dataStore.
+          // It will trigger the 'newData' event that webSocketServer.js is listening for.
+          logger.info(
+            "****NOW sending data to dataStore****",
+            instrumentKey,
+            instrumentData
+          );
+          dataStore.updateInstrumentData(instrumentKey, instrumentData);
+        }
+      }
+
+      // You can still log every message for debugging purposes
+      if (decodedData) {
+        logger.info("Received and decoded market data:", {
+          data: decodedData.toJSON(),
+        });
+      }
+
+      // logger.info("Received decoded market data:IMP$$$$$$$$$$$$", {
+      //   data: decodedData.toJSON(),
+      // });
     });
 
     ws.on("error", (error) => {

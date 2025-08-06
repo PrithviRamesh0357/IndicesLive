@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
+const http = require("http");
+const { Server } = require("socket.io");
 dotenv.config();
 
 const logger = require("./utils/logger");
@@ -10,10 +12,18 @@ const {
 } = require("./services/marketDataService/upstoxSocketV3");
 const { REDIS_ACCESS_TOKEN_KEY } = require("./services/authService");
 const dataStore = require("./services/marketDataService/dataStore");
+const { initWebSocketServer } = require("./services/webSocketServer");
 
 const app = express();
 
+//Because we need a single PORT for both app and websockets to listen to events
+//This creates a server for express
+const server = http.createServer(app);
+
 const PORT = process.env.PORT || 3000;
+
+//Initialize the webSocket Server and pass it the http server. This i simportant
+initWebSocketServer(server);
 
 logger.debug("Debug log");
 logger.info("Info log");
@@ -24,6 +34,7 @@ app.use(cors());
 app.use(express.json()); // Middleware to parse JSON bodies
 
 const authRoutes = require("./routes/auth");
+
 app.use("/auth", authRoutes);
 
 // Route to test setting a value in Redis
@@ -63,32 +74,33 @@ app.get("/", (req, res) => {
 });
 
 app.get("/api/market", (req, res) => {
-  const allData = dataStore.getAllData();
-  const formattedData = {};
+  // const allData = dataStore.getAllData();
+  // const formattedData = {};
 
-  for (const instrumentKey in allData) {
-    const instrumentData = allData[instrumentKey];
-    // Safely access nested properties
-    const ltpc = instrumentData?.fullFeed?.indexFF?.ltpc;
+  // for (const instrumentKey in allData) {
+  //   const instrumentData = allData[instrumentKey];
+  //   // Safely access nested properties
+  //   const ltpc = instrumentData?.fullFeed?.indexFF?.ltpc;
 
-    if (ltpc && ltpc.ltp != null && ltpc.cp != null) {
-      const change = ltpc.ltp - ltpc.cp;
-      const percentChange = ((change / ltpc.cp) * 100).toFixed(2);
+  //   if (ltpc && ltpc.ltp != null && ltpc.cp != null) {
+  //     const change = ltpc.ltp - ltpc.cp;
+  //     const percentChange = ((change / ltpc.cp) * 100).toFixed(2);
 
-      // Create a simpler key for the frontend, e.g., "NIFTY_50" from "NSE_INDEX|Nifty 50"
-      const simpleKey = instrumentKey
-        .split("|")[1]
-        .replace(" ", "_")
-        .toUpperCase();
+  //     // Create a simpler key for the frontend, e.g., "NIFTY_50" from "NSE_INDEX|Nifty 50"
+  //     const simpleKey = instrumentKey
+  //       .split("|")[1]
+  //       .replace(" ", "_")
+  //       .toUpperCase();
 
-      formattedData[simpleKey] = {
-        value: ltpc.ltp.toFixed(2),
-        change: change.toFixed(2),
-        percentChange: `${percentChange > 0 ? "+" : ""}${percentChange}%`,
-      };
-    }
-  }
-
+  //     formattedData[simpleKey] = {
+  //       value: ltpc.ltp.toFixed(2),
+  //       change: change.toFixed(2),
+  //       percentChange: `${percentChange > 0 ? "+" : ""}${percentChange}%`,
+  //     };
+  //   }
+  // }
+  // This now uses the new helper function in dataStore
+  const formattedData = dataStore.getAllFormattedData();
   res.json(formattedData);
 });
 
@@ -106,7 +118,8 @@ app.get("/api/mock-data", (req, res) => {
   res.json(mockData);
 });
 
-app.listen(PORT, async () => {
+//Listen on the http server not the app
+server.listen(PORT, async () => {
   logger.info(`Server is running and listening on PORT: ${PORT}`);
 
   // On server startup, check if a token exists and try to connect to the WebSocket.
