@@ -5,8 +5,7 @@ const logger = require("../utils/logger");
 
 const RedisService = {
   async set(key, value, ttl = null) {
-    logger.info(` IN REDIS SERVICE +++++++++++++++++++++++`);
-    logger.info(`Setting Redis key "${key}" with value "${value}"`);
+    logger.debug(`Setting Redis key "${key}"`);
     try {
       const options = {};
       if (ttl) {
